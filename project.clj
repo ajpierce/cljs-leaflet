@@ -38,6 +38,7 @@
                 :source-paths ["src"]
                 :compiler {:output-to "resources/public/js/compiled/cljs_leaflet.js"
                            :main cljs-leaflet.core
+                           :externs ["src/cljs_leaflet/externs.js"]
                            :optimizations :advanced
                            :pretty-print false}}]}
 
