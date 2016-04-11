@@ -1,5 +1,6 @@
 (ns cljs-leaflet.core
-  (:require [cljsjs.leaflet]))
+  (:require [cljsjs.leaflet]
+            [clojure.string :as str]))
 
 (enable-console-print!)
 
@@ -94,7 +95,26 @@
         (.clearLayers vector-layer)
         (.addLayer vector-layer gj) ))))
 
-(add-point! {:coordinates [-0.09, 51.5] :type "Point"})
+(defn get-map-bounds [lmap]
+  (let [bbox-string (.toBBoxString (.getBounds lmap))
+        bbox-vector (str/split bbox-string ",")]
+    (map js/parseFloat bbox-vector)))
+
+(defn random-coords-in-view [lmap]
+  (let [bounds (get-map-bounds lmap)
+        lngs (take-nth 2 bounds)
+        lats (take-nth 2 (rest bounds))
+        lng-range (- (last lngs) (first lngs) )
+        lat-range (- (last lats) (first lats) ) ]
+    [(+ (first lngs) (rand lng-range)) (+ (first lats) (rand lat-range))] ))
+
+(defn generate-random-point! [n]
+  (println "Generating random point" n)
+  (add-point! {:coordinates (random-coords-in-view main-map)
+               :type "Point"} ))
+
+;; Generate 10 random points on the map
+(dotimes [n 10] (generate-random-point! n))
 
 (defn on-js-reload []
   ;; optionally touch your app-state to force rerendering depending on
