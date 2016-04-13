@@ -1,5 +1,6 @@
 (ns cljs-leaflet.core
   (:require [cljsjs.leaflet]
+            [reagent.core :as r]
             [clojure.string :as str]))
 
 (enable-console-print!)
@@ -54,8 +55,6 @@
 (defn setup-map! [lmap]
   (.addTo tile-layer lmap)
   (.addTo vector-layer lmap))
-
-(setup-map! main-map)
 
 ;; -- Function to add a point directly to the map -- ;;
 (defn add-point-directly! [layer coords]
@@ -113,11 +112,24 @@
   (add-point! {:coordinates (random-coords-in-view main-map)
                :type "Point"} ))
 
-;; Generate 10 random points on the map
-(dotimes [n 10] (generate-random-point! n))
-
 (defn on-js-reload []
   ;; optionally touch your app-state to force rerendering depending on
   ;; your application
   (swap! app-state update-in [:__figwheel_counter] inc)
 )
+
+;; Button to generate 10 random points on the map
+(defn add-points-btn [num-points]
+  [:div
+   [:br]
+   [:input {:type "button"
+            :value "Add points to Map"
+            :on-click #(dotimes [n num-points] (generate-random-point! n))}] ])
+
+(defn render-page []
+  (r/render-component
+   [add-points-btn 10]
+   (.getElementById js/document "app"))
+  (setup-map! main-map))
+
+(render-page)
