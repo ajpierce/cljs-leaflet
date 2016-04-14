@@ -1,7 +1,8 @@
 (ns cljs-leaflet.core
   (:require [cljsjs.leaflet]
             [reagent.core :as r]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojure.data]))
 
 (enable-console-print!)
 
@@ -32,7 +33,7 @@
    :color "#000"
    :weight 1
    :opacity 1
-   :fillOpacity 0.8} )
+   :fillOpacity 0.6} )
 
 (defn point-to-layer [feature, latlng]  ;; http://leafletjs.com/examples/geojson.html
   (.circleMarker js/L latlng (clj->js gj-marker-settings)))
@@ -52,47 +53,53 @@
 
 (defonce vector-layer (.layerGroup js/L))
 
-(defn setup-map! [lmap]
-  (.addTo tile-layer lmap)
-  (.addTo vector-layer lmap))
-
-;; -- Function to add a point directly to the map -- ;;
-(defn add-point-directly! [layer coords]
-  (println (str "Adding point to map at coords" coords))
-  (.addTo (.marker js/L
-                   (clj->js coords)
-                   (clj->js map-icon))
-          layer))
-;;(add-point-directly! vector-layer [51.5, -0.09])
-;; -------------------------------------------------- ;;
-
-;; Gets a unique identifier for layers by incrementing an int in the app state
-(defn get-layer-id! []
-  (:latest-id (swap! app-state update-in [:latest-id] inc)))
-
-;; Functions to swap data into (or out of) our atom
-(defn add-point! [point-data]
-  (swap! app-state assoc-in [:map-layers (get-layer-id!)] point-data))
-
-(defn remove-point! [id]
-  (println (str "Removing point " id))
-  (swap! app-state update-in [:map-layers] dissoc id))
-
 (defn create-geojson [features]
   (let [fc {:type "FeatureCollection" :features features}
         fcjs (clj->js fc)]
     (.geoJson js/L fcjs
                    (clj->js {:pointToLayer point-to-layer}) )))
 
+(defonce gj-layer (create-geojson []))
+
+(defn setup-map! [lmap]
+  (.addTo tile-layer lmap)
+  (.addTo vector-layer lmap)
+  (.addLayer vector-layer gj-layer))
+
+;; Gets a unique identifier for layers by incrementing an int in the app state
+(defn get-layer-id! []
+  (:latest-id (swap! app-state update-in [:latest-id] inc)))
+
+;; Get n valid IDs
+(defn get-layer-ids! [n]
+  (let [id (:latest-id (swap! app-state update-in [:latest-id]  #(+ % n)))]
+    (range (- id n) id) ))
+
+;; Functions to swap data into (or out of) our atom
+(defn add-point! [point-data]
+  (swap! app-state assoc-in [:map-layers (get-layer-id!)] point-data))
+
+(defn add-points! [points-list]
+  (let [ids (get-layer-ids! (count points-list))
+        points-map (zipmap ids points-list)]
+    (swap! app-state assoc :map-layers (merge (:map-layers @app-state) points-map)) ))
+
+(defn remove-point! [id]
+  (println (str "Removing point " id))
+  (swap! app-state update-in [:map-layers] dissoc id))
+
+(defn add-to-geojson! [data]
+  (.addData gj-layer (clj->js data)))
+
  ;; Listens for state changes in the atom and updates the map accordingly
 (add-watch app-state :map-layers-watcher
   (fn [r k old-state new-state]
     (when (not= (:map-layers old-state) (:map-layers new-state))
-      (let [features (vals (:map-layers new-state))
-            gj (create-geojson features)]
-        ;; Clear map layers and re-add the new layer
-        (.clearLayers vector-layer)
-        (.addLayer vector-layer gj) ))))
+      (let [diffs (clojure.data/diff
+                    (:map-layers old-state)
+                    (:map-layers new-state) )
+            values-added (vals (second diffs)) ]
+        (doseq [p values-added] (add-to-geojson! p)) ))))
 
 (defn get-map-bounds [lmap]
   (let [bbox-string (.toBBoxString (.getBounds lmap))
@@ -107,16 +114,16 @@
         lat-range (- (last lats) (first lats) ) ]
     [(+ (first lngs) (rand lng-range)) (+ (first lats) (rand lat-range))] ))
 
-(defn generate-random-point! [n]
-  (println "Generating random point" n)
-  (add-point! {:coordinates (random-coords-in-view main-map)
-               :type "Point"} ))
+(defn generate-random-point []
+  {:coordinates (random-coords-in-view main-map) :type "Point"})
+
+(defn generate-random-points [n]
+  (repeatedly n #(generate-random-point)))
 
 (defn on-js-reload []
   ;; optionally touch your app-state to force rerendering depending on
   ;; your application
-  (swap! app-state update-in [:__figwheel_counter] inc)
-)
+  (swap! app-state update-in [:__figwheel_counter] inc))
 
 ;; Button to generate 10 random points on the map
 (defn add-points-btn [num-points]
@@ -124,12 +131,22 @@
    [:br]
    [:input {:type "button"
             :value "Add points to Map"
-            :on-click #(dotimes [n num-points] (generate-random-point! n))}] ])
+            :on-click #(time (add-points! (generate-random-points num-points)))
+            }]])
+
+;; TODO: Automatically increment
+;(defn total-points-count []
+  ;[:div
+   ;[:b "Total Points:"] (count (:map-layers @app-state)) ])
 
 (defn render-page []
   (r/render-component
-   [add-points-btn 10]
-   (.getElementById js/document "app"))
+    [:div
+     [add-points-btn 50]
+     [:br]
+     ;[total-points-count]
+     ]
+    (.getElementById js/document "app"))
   (setup-map! main-map))
 
 (render-page)
