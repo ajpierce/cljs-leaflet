@@ -132,7 +132,10 @@
    [:br]
    [:input {:type "button"
             :value "Add points to Map"
-            :on-click #(time (add-points! (generate-random-points (:create-points-qty @app-state)))) }]])
+            :on-click #(-> @app-state :create-points-qty
+                           generate-random-points
+                           add-points!
+                           time) }]])
 
 (defn point-qty-input [ratom]
   [:input {:type "number"
