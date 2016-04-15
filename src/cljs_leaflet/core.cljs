@@ -40,8 +40,9 @@
 
 ;; define your app data so that it doesn't get over-written on reload
 (defonce app-state
-  (atom {:latest-id 0
-         :map-layers {} }))
+  (r/atom {:latest-id 0
+           :create-points-qty 10
+           :map-layers {} }))
 
 (defonce main-map
   (.setView (.map js/L "map") (clj->js (:center map-info)) (:zoom map-info)))
@@ -125,27 +126,31 @@
   ;; your application
   (swap! app-state update-in [:__figwheel_counter] inc))
 
-;; Button to generate 10 random points on the map
-(defn add-points-btn [num-points]
+;; Button to generate random points on the map
+(defn add-points-btn []
   [:div
    [:br]
    [:input {:type "button"
             :value "Add points to Map"
-            :on-click #(time (add-points! (generate-random-points num-points)))
-            }]])
+            :on-click #(time (add-points! (generate-random-points (:create-points-qty @app-state)))) }]])
 
-;; TODO: Automatically increment
-;(defn total-points-count []
-  ;[:div
-   ;[:b "Total Points:"] (count (:map-layers @app-state)) ])
+(defn point-qty-input [ratom]
+  [:input {:type "number"
+           :value (:create-points-qty @ratom)
+           :on-change #(swap! ratom assoc :create-points-qty (-> % .-target .-value js/parseInt)) }])
+
+(defn total-points-count []
+  [:div
+   [:b "Add points: " (point-qty-input app-state)]
+   [:br]
+   [:b "Total Points: "] (count (:map-layers @app-state)) ])
 
 (defn render-page []
   (r/render-component
     [:div
-     [add-points-btn 50]
+     [add-points-btn]
      [:br]
-     ;[total-points-count]
-     ]
+     [total-points-count] ]
     (.getElementById js/document "app"))
   (setup-map! main-map))
 
