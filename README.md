@@ -37,6 +37,14 @@ To create a production build run:
 And open your browser in `resources/public/index.html`. You will not
 get live reloading, nor a REPL.
 
+### Add Secrets File
+Add the following code to `src/cljs_leaflet/secrets.cljs`, replacing `your_api_key` with a valid Mapbox API key:
+
+```clojure
+(ns cljs-leaflet.secrets)
+(defonce mapbox-api-key "your_api_key")
+```
+
 ## MIT License
 
 Copyright © 2016 Andrew Pierce
