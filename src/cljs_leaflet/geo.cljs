@@ -16,14 +16,6 @@
                                        "Imagery © <a href='http://mapbox.com'>Mapbox</a>")
                      :id "mapbox.streets"} }})
 
-;; cljsjs doesn't come with leaflet image assets, so we create our own icons
-(defonce map-icon
-  {:icon (.icon js/L (clj->js {
-    :iconUrl "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-icon-2x.png"
-    :shadowUrl "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png"
-    :iconSize [25 41]
-    :iconAnchor [12 41] }))})
-
 ;; cljsjs doesn't come with image assets, so substitute with circlemarker settings
 (defonce gj-marker-settings
   {:radius 8
