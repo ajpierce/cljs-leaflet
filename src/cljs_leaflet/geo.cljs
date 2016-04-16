@@ -1,5 +1,6 @@
 (ns cljs-leaflet.geo
   (:require [cljsjs.leaflet]
+            [cljs-leaflet.secrets :as 🙈]
             [clojure.string :as str] ))
 
 (enable-console-print!)
@@ -8,7 +9,7 @@
    :center [51.505 -0.09]
    :zoom 13
    :tiles {
-           :url "https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw",
+           :url (str "https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=" 🙈/mapbox-api-key)
            :options {
                      :maxZoom 18
                      :attribution (str "Map data &copy; <a href='http://openstreetmap.org'>OpenStreetMap</a> contributors, "
