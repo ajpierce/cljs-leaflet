@@ -16,6 +16,19 @@
                                        "Imagery © <a href='http://mapbox.com'>Mapbox</a>")
                      :id "mapbox.streets"} }})
 
+; return L.map(div-id).setView(map-info.center, map-info.zoom);
+(defn instantiate-map! [div-id]
+  (.setView (.map js/L div-id)
+            (clj->js (:center map-info))
+            (:zoom map-info)))
+
+(defonce tile-layer
+  (.tileLayer js/L
+              (:url (:tiles map-info))
+              (clj->js (:options (:tiles map-info))) ))
+
+(defonce vector-layer (.layerGroup js/L))
+
 ;; cljsjs doesn't come with image assets, so substitute with circlemarker settings
 (defonce gj-marker-settings
   {:radius 8
@@ -25,21 +38,8 @@
    :opacity 1
    :fillOpacity 0.6} )
 
-; return L.map(div-id).setView(map-info.center, map-info.zoom);
-(defn instantiate-map! [div-id]
-  (.setView (.map js/L div-id)
-            (clj->js (:center map-info))
-            (:zoom map-info)))
-
 (defn point-to-layer [feature, latlng]  ;; http://leafletjs.com/examples/geojson.html
   (.circleMarker js/L latlng (clj->js gj-marker-settings)))
-
-(defonce tile-layer
-  (.tileLayer js/L
-              (:url (:tiles map-info))
-              (clj->js (:options (:tiles map-info))) ))
-
-(defonce vector-layer (.layerGroup js/L))
 
 (defn create-geojson [features]
   (let [fc {:type "FeatureCollection" :features features}]
