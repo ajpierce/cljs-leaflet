@@ -62,6 +62,10 @@
 (defn add-to-gj-layer! [data]
   (.addData gj-layer (clj->js data)))
 
+(defn remove-from-gj-layer! [data]
+  ; TODO: efficient way to remove points from the map
+  )
+
 (defn random-coords-in-view [lmap]
   (let [bounds (get-map-bounds lmap)
         lngs (take-nth 2 bounds)
