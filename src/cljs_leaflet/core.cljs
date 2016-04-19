@@ -51,9 +51,12 @@
                     (:map-layers old-state)
                     (:map-layers new-state) )
             values-added (vals (second diffs))
-            values-removed (vals (first diffs))]
-        (doseq [p values-added] (g/add-to-gj-layer! p))
-        (doseq [p values-removed] (g/remove-from-gj-layer! p))
+            values-removed (vals (first diffs))
+            values-added? (< 0 (count values-added))
+            values-removed? (< 0 (count values-removed))]
+        (if (and values-added? (not values-removed?))
+          (doseq [p values-added] (g/add-to-gj-layer! p))
+          (g/re-render-gj-layer! (vals (:map-layers new-state))) )
         ))))
 
 (defn random-points-in-main-map-view [n]
