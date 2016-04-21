@@ -1,5 +1,6 @@
 (ns cljs-leaflet.core
   (:require [cljsjs.leaflet]
+            [cljs-leaflet.http :as h]
             [cljs-leaflet.geo :as g]
             [clojure.data]
             [reagent.core :as r]))
@@ -108,7 +109,13 @@
       [:br]
       [remove-points-html]
       [:br]
-      [total-points-count] ]
+      [total-points-count]
+      [:br]
+      [:div [:h2 "Learn Async HTTP"]
+       [:br]
+       [h/print-github-users-btn]
+       [h/print-github-users-btn :since 1]
+       ]]
     (.getElementById js/document "app")))
 
 (render-page)

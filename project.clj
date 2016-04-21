@@ -10,6 +10,7 @@
                  [org.clojure/clojurescript "1.7.228"]
                  [org.clojure/core.async "0.2.374"
                   :exclusions [org.clojure/tools.reader]]
+                 [cljs-http "0.1.40"]
                  [reagent "0.6.0-alpha"]
                  [cljsjs/leaflet "0.7.7-2"]]
   
