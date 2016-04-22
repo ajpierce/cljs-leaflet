@@ -70,16 +70,22 @@
     ; If data is nil, just clear the map
     (.clearLayers gj-layer) ))
 
-(defn random-coords-in-view [lmap]
-  (let [bounds (get-map-bounds lmap)
-        lngs (take-nth 2 bounds)
+(defn random-coords-in-bounds [bounds]
+  (let [lngs (take-nth 2 bounds)
         lats (take-nth 2 (rest bounds))
         lng-range (- (last lngs) (first lngs) )
         lat-range (- (last lats) (first lats) ) ]
     [(+ (first lngs) (rand lng-range)) (+ (first lats) (rand lat-range))] ))
 
-(defn generate-random-point [lmap]
-  {:coordinates (random-coords-in-view lmap) :type "Point"})
+(defn generate-random-point-in-bounds [bounds]
+  {:coordinates (random-coords-in-bounds bounds) :type "Point"})
+
+(defn random-coords-in-map-view [lmap]
+  (let [bounds (get-map-bounds lmap)]
+    (random-coords-in-bounds bounds)))
+
+(defn generate-random-point-on-map [lmap]
+  {:coordinates (random-coords-in-map-view lmap) :type "Point"})
 
 (defn generate-random-points [lmap, n]
-  (repeatedly n #(generate-random-point lmap)))
+  (repeatedly n #(generate-random-point-on-map lmap)))
