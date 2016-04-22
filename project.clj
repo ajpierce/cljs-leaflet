@@ -1,63 +1,82 @@
 (defproject cljs-leaflet "0.1.0-SNAPSHOT"
   :description "Leaflet in Clojurescript"
-  :url "http://example.com/FIXME"
+  :url "http://github.com/ajpierce/cljs-leaflet"
   :license {:name "MIT"
             :url "https://opensource.org/licenses/MIT"}
 
   :min-lein-version "2.6.1"
-  
+
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.7.228"]
+                 [org.clojure/clojurescript "1.8.40" :scope "provided"]
                  [org.clojure/core.async "0.2.374"
                   :exclusions [org.clojure/tools.reader]]
+                 [ring "1.4.0"]
+                 [ring/ring-defaults "0.2.0"]
+                 [ring/ring-json "0.4.0"]
+                 [bk/ring-gzip "0.1.1"]
+                 [ring.middleware.logger "0.5.0"]
+                 [compojure "1.5.0"]
+                 [environ "1.0.2"]
+                 ;; Clojurescript libraries
                  [cljs-http "0.1.40"]
-                 [reagent "0.6.0-alpha"]
+                 [reagent "0.5.1"]
                  [cljsjs/leaflet "0.7.7-2"]]
-  
-  :plugins [[lein-figwheel "0.5.2"]
-            [lein-cljsbuild "1.1.3" :exclusions [[org.clojure/clojure]]]]
 
-  :source-paths ["src"]
+  :plugins [[lein-cljsbuild "1.1.1"]
+            [lein-environ "1.0.1"]]
 
-  :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"]
+  :source-paths ["src/clj" "src/cljs" "dev"]
+
+  :test-paths ["test/clj"]
+
+  :clean-targets ^{:protect false} [:target-path :compile-path "resources/public/js"]
+
+  :uberjar-name "cljs-leaflet.jar"
+
+  ;; Use `lein run` if you just want to start a HTTP server, without figwheel
+  :main cljs-leaflet.server
+
+  ;; nREPL by default starts in the :main namespace, we want to start in `user`
+  ;; because that's where our development helper functions like (run) and
+  ;; (browser-repl) live.
+  :repl-options {:init-ns user}
 
   :cljsbuild {:builds
-              [{:id "dev"
-                :source-paths ["src"]
+              {:app
+               {:source-paths ["src/cljs"]
 
-                ;; If no code is to be run, set :figwheel true for continued automagical reloading
-                :figwheel {:on-jsload "cljs-leaflet.core/on-js-reload"}
+                :figwheel true
+                ;; Alternatively, you can configure a function to run every time figwheel reloads.
+                ;; :figwheel {:on-jsload "cljs-leaflet.core/on-figwheel-reload"}
 
                 :compiler {:main cljs-leaflet.core
                            :asset-path "js/compiled/out"
                            :output-to "resources/public/js/compiled/cljs_leaflet.js"
                            :output-dir "resources/public/js/compiled/out"
-                           :source-map-timestamp true}}
-               ;; This next build is an compressed minified build for
-               ;; production. You can build this with:
-               ;; lein cljsbuild once min
-               {:id "min"
-                :source-paths ["src"]
-                :compiler {:output-to "resources/public/js/compiled/cljs_leaflet.js"
-                           :main cljs-leaflet.core
-                           :externs ["src/cljs_leaflet/externs.js"]
-                           :optimizations :advanced
-                           :pretty-print false}}]}
+                           :source-map-timestamp true}}}}
 
-  :figwheel {;; :http-server-root "public" ;; default and assumes "resources"
-             ;; :server-port 3449 ;; default
-             ;; :server-ip "127.0.0.1"
+  ;; When running figwheel from nREPL, figwheel will read this configuration
+  ;; stanza, but it will read it without passing through leiningen's profile
+  ;; merging. So don't put a :figwheel section under the :dev profile, it will
+  ;; not be picked up, instead configure figwheel here on the top level.
 
-             :css-dirs ["resources/public/css"] ;; watch and update CSS
+  :figwheel {;; :http-server-root "public"       ;; serve static assets from resources/public/
+             ;; :server-port 3449                ;; default
+             ;; :server-ip "127.0.0.1"           ;; default
+             :css-dirs ["resources/public/css"]  ;; watch and update CSS
 
-             ;; Start an nREPL server into the running figwheel process
+             ;; Instead of booting a separate server on its own port, we embed
+             ;; the server ring handler inside figwheel's http-kit server, so
+             ;; assets and API endpoints can all be accessed on the same host
+             ;; and port. If you prefer a separate server process then take this
+             ;; out and start the server with `lein run`.
+             :ring-handler user/http-handler
+
+             ;; Start an nREPL server into the running figwheel process. We
+             ;; don't do this, instead we do the opposite, running figwheel from
+             ;; an nREPL process, see
+             ;; https://github.com/bhauman/lein-figwheel/wiki/Using-the-Figwheel-REPL-within-NRepl
              ;; :nrepl-port 7888
-
-             ;; Server Ring Handler (optional)
-             ;; if you want to embed a ring handler into the figwheel http-kit
-             ;; server, this is for simple ring servers, if this
-             ;; doesn't work for you just run your own server :)
-             ;; :ring-handler hello_world.server/handler
 
              ;; To be able to open files in your editor from the heads up display
              ;; you will need to put a script on your path.
@@ -68,9 +87,35 @@
              ;;
              ;; :open-file-command "myfile-opener"
 
-             ;; if you want to disable the REPL
-             ;; :repl false
+             :server-logfile "log/figwheel.log"}
 
-             ;; to configure a different figwheel logfile path
-             ;; :server-logfile "tmp/logs/figwheel-logfile.log"
-             })
+  :doo {:build "test"}
+
+  :profiles {:dev
+             {:dependencies [[figwheel "0.5.2"]
+                             [figwheel-sidecar "0.5.2"]
+                             [com.cemerick/piggieback "0.2.1"]
+                             [org.clojure/tools.nrepl "0.2.12"]]
+
+              :plugins [[lein-figwheel "0.5.2"]
+                        [lein-doo "0.1.6"]]
+
+              :cljsbuild {:builds
+                          {:test
+                           {:source-paths ["src/cljs" "test/cljs"]
+                            :compiler
+                            {:output-to "resources/public/js/compiled/testable.js"
+                             :main cljs-leaflet.test-runner
+                             :optimizations :none}}}}}
+
+             :uberjar
+             {:source-paths ^:replace ["src/clj"]
+              :hooks [leiningen.cljsbuild]
+              :omit-source true
+              :aot :all
+              :cljsbuild {:builds
+                          {:app
+                           {:source-paths ^:replace ["src/cljs"]
+                            :compiler
+                            {:optimizations :advanced
+                             :pretty-print false}}}}}})
