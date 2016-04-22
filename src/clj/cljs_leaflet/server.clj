@@ -8,15 +8,26 @@
             [ring.middleware.logger :refer [wrap-with-logger]]
             [ring.util.response :refer [response]]
             [environ.core :refer [env]]
-            [ring.adapter.jetty :refer [run-jetty]])
+            [ring.adapter.jetty :refer [run-jetty]]
+
+            ;; application imports
+            ;; TODO:
+            )
   (:gen-class))
+
+(defn random-points-response [params]
+  (let [num-points (if (nil? (:n params)) 0 (:n params))]
+    (response {:msg (str "You requested " num-points " random points")}) ))
 
 (defroutes routes
   (GET "/" _
     {:status 200
      :headers {"Content-Type" "text/html; charset=utf-8"}
      :body (io/input-stream (io/resource "public/index.html"))})
-  (GET "/json" [] (response {:foo "bar"}))
+  (GET "/json" _
+       (response {:foo "bar"}))
+  (GET "/points" {params :params}
+       (random-points-response params))
   (resources "/"))
 
 (def http-handler
