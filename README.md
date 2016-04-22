@@ -2,6 +2,16 @@
 
 A playground/laboratory for using clojurescript to manipulate leaflet maps
 
+## Setup
+
+### Add Secrets File
+Add the following code to `src/cljs_leaflet/secrets.cljs`, replacing `your_api_key` with a valid Mapbox API key:
+
+```clojure
+(ns cljs-leaflet.secrets)
+(defonce mapbox-api-key "your_api_key")
+```
+
 ## Development
 
 Open a terminal and type `lein repl` to start a Clojure REPL
@@ -49,6 +59,9 @@ In the REPL, type
 
 Notice again how the browser updates.
 
+## IDEs
+I'm a VIM guy myself, but Chestnut has this to say about IDEs:
+
 ### Lighttable
 
 Lighttable provides a tighter integration for live coding with an inline
@@ -79,42 +92,15 @@ To run the Clojurescript tests, do
 lein doo phantom
 ```
 
-## Deploying to Heroku
+## MIT License
 
-This assumes you have a
-[Heroku account](https://signup.heroku.com/dc), have installed the
-[Heroku toolbelt](https://toolbelt.heroku.com/), and have done a
-`heroku login` before.
+Copyright © 2016 Andrew Pierce
 
-``` sh
-git init
-git add -A
-git commit
-heroku create
-git push heroku master:master
-heroku open
-```
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-## Running with Foreman
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-Heroku uses [Foreman](http://ddollar.github.io/foreman/) to run your
-app, which uses the `Procfile` in your repository to figure out which
-server command to run. Heroku also compiles and runs your code with a
-Leiningen "production" profile, instead of "dev". To locally simulate
-what Heroku does you can do:
-
-``` sh
-lein with-profile -dev,+production uberjar && foreman start
-```
-
-Now your app is running at
-[http://localhost:5000](http://localhost:5000) in production mode.
-## License
-
-Copyright © 2016 FIXME
-
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## Chestnut
 
