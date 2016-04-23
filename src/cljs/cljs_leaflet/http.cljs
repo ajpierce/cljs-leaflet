@@ -19,3 +19,9 @@
   [:input {:type "button"
            :value (print-usr-btn-txt since)
            :on-click #(req-github-users since) }])
+
+(defn random-points [num-points]
+  (go (let [response (<! (http/get "/points"
+                                   {:query-params {"n" num-points}}))]
+        (println (:body response))
+        (:body response) )))

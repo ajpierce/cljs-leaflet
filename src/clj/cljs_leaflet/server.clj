@@ -1,5 +1,6 @@
 (ns cljs-leaflet.server
   (:require [clojure.java.io :as io]
+            [clojure.string :as str]
             [compojure.core :refer [ANY GET PUT POST DELETE defroutes]]
             [compojure.route :refer [resources]]
             [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
@@ -15,9 +16,29 @@
             )
   (:gen-class))
 
+(defn random-coords-in-bounds [bounds]
+  (let [lngs (take-nth 2 bounds)
+        lats (take-nth 2 (rest bounds))
+        lng-range (- (last lngs) (first lngs) )
+        lat-range (- (last lats) (first lats) ) ]
+    [(+ (first lngs) (rand lng-range)) (+ (first lats) (rand lat-range))] ))
+
+(defn generate-random-point-in-bounds [bounds]
+  {:coordinates (random-coords-in-bounds bounds) :type "Point"})
+
 (defn random-points-response [params]
-  (let [num-points (if (nil? (:n params)) 0 (:n params))]
-    (response {:msg (str "You requested " num-points " random points")}) ))
+  (let [num-points (if (nil? (:n params))
+                     0
+                     (. Integer parseInt (:n params)))
+
+        ; TODO: Add better error handling for invalid bounds arguments
+        bounds (if (nil? (:bounds params))
+                 [-180 -90 180 90]
+                 (map #(. Double parseDouble %)
+                      (str/split (:bounds params) #",") ))]
+
+    (println "Num points: " num-points " Bounds: " bounds)
+    (response (repeatedly num-points #(generate-random-point-in-bounds bounds))) ))
 
 (defroutes routes
   (GET "/" _
