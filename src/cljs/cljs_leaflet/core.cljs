@@ -1,8 +1,10 @@
 (ns cljs-leaflet.core
+  (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [cljsjs.leaflet]
+            [cljs.core.async :refer [<!]]
             [cljs-leaflet.http :as h]
             [cljs-leaflet.geo :as g]
-            [clojure.data]
+            [clojure.data :refer [diff]]
             [reagent.core :as r]))
 
 ;; define your app data so that it doesn't get over-written on reload
@@ -48,7 +50,7 @@
 (add-watch app-state :map-layers-watcher
   (fn [r k old-state new-state]
     (when (not= (:map-layers old-state) (:map-layers new-state))
-      (let [diffs (clojure.data/diff
+      (let [diffs (diff
                     (:map-layers old-state)
                     (:map-layers new-state) )
             values-added (vals (second diffs))
@@ -80,6 +82,15 @@
                            random-points-in-main-map-view
                            add-points!
                            time) }]])
+
+(defn add-points-async-html []
+  [:div
+   [:b "Add points ASYNC: " (add-qty-input app-state)]
+   [:input {:type "button"
+            :value "Add points to Map by making a backend call to generate geojson"
+            :on-click #(let [response-chan (-> @app-state :add-points-qty h/random-points)]
+                           (go (let [response (<! response-chan)]
+                                 (-> response add-points! time) )) )}]])
 
 (defn remove-qty-input [ratom]
   [:input {:type "number"
@@ -113,6 +124,7 @@
       [:br]
       [:div [:h2 "Learn Async HTTP"]
        [:br]
+       [add-points-async-html]
        [h/print-github-users-btn]
        [h/print-github-users-btn :since 1]
        ]]

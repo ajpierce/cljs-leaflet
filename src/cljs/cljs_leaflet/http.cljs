@@ -23,5 +23,4 @@
 (defn random-points [num-points]
   (go (let [response (<! (http/get "/points"
                                    {:query-params {"n" num-points}}))]
-        (println (:body response))
         (:body response) )))
