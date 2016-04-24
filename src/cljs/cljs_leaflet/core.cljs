@@ -88,7 +88,9 @@
    [:b "Add points ASYNC: " (add-qty-input app-state)]
    [:input {:type "button"
             :value "Add points to Map by making a backend call to generate geojson"
-            :on-click #(let [response-chan (-> @app-state :add-points-qty h/random-points)]
+            :on-click #(let [map-bounds (g/get-map-bounds main-map)
+                             num-points (:add-points-qty @app-state)
+                             response-chan (h/random-points num-points map-bounds)]
                            (go (let [response (<! response-chan)]
                                  (-> response add-points! time) )) )}]])
 

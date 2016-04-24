@@ -1,7 +1,8 @@
 (ns cljs-leaflet.http
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [cljs-http.client :as http]
-            [cljs.core.async :refer [<!]]))
+            [cljs.core.async :refer [<!]]
+            [clojure.string :as str]))
 
 (defn req-github-users [since]
   (go (let [response (<! (http/get "https://api.github.com/users"
@@ -20,7 +21,8 @@
            :value (print-usr-btn-txt since)
            :on-click #(req-github-users since) }])
 
-(defn random-points [num-points]
+(defn random-points [num-points map-bounds]
   (go (let [response (<! (http/get "/points"
-                                   {:query-params {"n" num-points}}))]
+                                   {:query-params {"n" num-points
+                                                   "bounds" (str/join "," map-bounds)}}))]
         (:body response) )))
