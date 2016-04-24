@@ -77,7 +77,7 @@
   [:div
    [:b "Add points: " (add-qty-input app-state)]
    [:input {:type "button"
-            :value "Add points to Map"
+            :value "Plot"
             :on-click #(-> @app-state :add-points-qty
                            random-points-in-main-map-view
                            add-points!
@@ -87,7 +87,7 @@
   [:div
    [:b "Add points ASYNC: " (add-qty-input app-state)]
    [:input {:type "button"
-            :value "Add points to Map by making a backend call to generate geojson"
+            :value "Request Points"
             :on-click #(let [map-bounds (g/get-map-bounds main-map)
                              num-points (:add-points-qty @app-state)
                              response-chan (h/random-points num-points map-bounds)]
@@ -119,17 +119,11 @@
   (r/render-component
     [:div
       [add-points-html]
+       [add-points-async-html]
       [:br]
       [remove-points-html]
       [:br]
-      [total-points-count]
-      [:br]
-      [:div [:h2 "Learn Async HTTP"]
-       [:br]
-       [add-points-async-html]
-       [h/print-github-users-btn]
-       [h/print-github-users-btn :since 1]
-       ]]
+      [total-points-count] ]
     (.getElementById js/document "app")))
 
 (render-page)

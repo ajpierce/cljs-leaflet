@@ -4,23 +4,6 @@
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]))
 
-(defn req-github-users [since]
-  (go (let [response (<! (http/get "https://api.github.com/users"
-                                   {:with-credentials? false
-                                    :query-params {"since" since}}))]
-        (println (:status response))
-        (println (map :login (:body response))))))
-
-(defn print-usr-btn-txt [since]
-  (if (< 0 since)
-    (str "Print Github users (in console), offset by " since)
-    "Print Github users (in console)" ))
-
-(defn print-github-users-btn [& {:keys [since] :or {since 0}}]
-  [:input {:type "button"
-           :value (print-usr-btn-txt since)
-           :on-click #(req-github-users since) }])
-
 (defn random-points [num-points map-bounds]
   (go (let [response (<! (http/get "/points"
                                    {:query-params {"n" num-points
