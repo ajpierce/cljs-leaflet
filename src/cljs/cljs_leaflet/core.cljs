@@ -7,7 +7,7 @@
             [clojure.data :refer [diff]]
             [reagent.core :as r]))
 
-;; define your app data so that it doesn't get over-written on reload
+;; Global application state, `defonce` to persist data between updates
 (defonce app-state
   (r/atom {:latest-id 0
            :add-points-qty 10
@@ -20,11 +20,12 @@
 (defn get-layer-id! []
   (:latest-id (swap! app-state update-in [:latest-id] inc)))
 
-;; Get n valid IDs
+;; Get n new layer IDs, updating the app-state to track the next latest
 (defn get-new-layer-ids! [n]
   (let [id (:latest-id (swap! app-state update-in [:latest-id]  #(+ % n)))]
     (range (- id n) id) ))
 
+;; Get the IDs of the last n layers; not updating app-state
 (defn get-last-layer-ids [n]
   (let [id (:latest-id @app-state)]
     (range (- id n) id)))
@@ -33,11 +34,13 @@
 (defn add-point! [point-data]
   (swap! app-state assoc-in [:map-layers (get-layer-id!)] point-data))
 
+;; Takes an array of GeoJSON Point geometries and plots them on the map
 (defn add-points! [points-list]
   (let [ids (get-new-layer-ids! (count points-list))
         points-map (zipmap ids points-list)]
     (swap! app-state assoc :map-layers (merge (:map-layers @app-state) points-map)) ))
 
+;; Takes one or more IDs and removes the points associated with them
 (defn remove-point! [id]
    (swap! app-state assoc :map-layers (apply dissoc (:map-layers @app-state) id))
    (let [max-id (apply max (-> @app-state :map-layers keys))
@@ -46,7 +49,7 @@
                      (+ 1 max-id) )]
      (swap! app-state assoc :latest-id latest-id) ))
 
- ;; Listens for state changes in the atom and updates the map accordingly
+;; Listens for state changes in the atom and updates the map accordingly
 (add-watch app-state :map-layers-watcher
   (fn [r k old-state new-state]
     (when (not= (:map-layers old-state) (:map-layers new-state))
