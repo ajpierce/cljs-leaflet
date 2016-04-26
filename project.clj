@@ -25,7 +25,7 @@
   :plugins [[lein-cljsbuild "1.1.1"]
             [lein-environ "1.0.1"]]
 
-  :source-paths ["src/clj" "src/cljs" "dev"]
+  :source-paths ["src/clj" "src/cljs" "src/cljc" "dev"]
 
   :test-paths ["test/clj"]
 
